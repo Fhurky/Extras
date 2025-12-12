@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KPSS TEST</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 700px;
+    width: 100%;
+    padding: 40px;
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    font-weight: 700;
+  }
+
+  .upload-section {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px;
+    border: 3px dashed #667eea;
+    border-radius: 15px;
+    background: #f8f9ff;
+    transition: all 0.3s ease;
+  }
+
+  .upload-section:hover {
+    background: #f0f2ff;
+    border-color: #764ba2;
+  }
+
+  .file-input-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 15px;
+  }
+
+  #excelFile {
+    display: none;
+  }
+
+  .file-label {
+    display: inline-block;
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .file-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .load-btn {
+    padding: 12px 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-left: 10px;
+  }
+
+  .load-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .load-btn:active {
+    transform: translateY(0);
+  }
+
+  #question {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+    line-height: 1.6;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8ebff 100%);
+    border-radius: 15px;
+    animation: slideIn 0.4s ease-out;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  #options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .option-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    animation: fadeInUp 0.4s ease-out backwards;
+  }
+
+  .option-wrapper:nth-child(1) { animation-delay: 0.1s; }
+  .option-wrapper:nth-child(2) { animation-delay: 0.2s; }
+  .option-wrapper:nth-child(3) { animation-delay: 0.3s; }
+  .option-wrapper:nth-child(4) { animation-delay: 0.4s; }
+  .option-wrapper:nth-child(5) { animation-delay: 0.5s; }
+
+  .search-btn {
+    padding: 20px 18px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .option {
+    padding: 20px 25px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+  }
+
+
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .option:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    transform: translateX(10px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  }
+
+  .option.correct {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border-color: transparent;
+    animation: pulse 0.5s ease;
+  }
+
+  .option.wrong {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    color: white;
+    border-color: transparent;
+    animation: shake 0.5s ease;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  .next-btn {
+    margin-top: 30px;
+    padding: 15px 50px;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .file-name {
+    display: block;
+    margin-top: 10px;
+    color: #667eea;
+    font-weight: 600;
+  }
+
+  .question-count-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .question-count-section h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+
+  .count-options {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .count-btn {
+    padding: 12px 25px;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #667eea;
+  }
+
+  .count-btn:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .count-btn.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+  }
+
+  .score-section {
+    text-align: center;
+    padding: 40px;
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  .score-section h2 {
+    color: #667eea;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+  }
+
+  .score-display {
+    font-size: 5em;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 20px 0;
+  }
+
+  .score-details {
+    font-size: 1.2em;
+    color: #666;
+    margin: 20px 0;
+  }
+
+  .restart-btn {
+    margin-top: 30px;
+    padding: 15px 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .restart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+  }
+
+  .question-counter {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    body {
+      padding: 10px;
+    }
+
+    .container {
+      padding: 20px;
+      border-radius: 15px;
+    }
+
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+    }
+
+    .upload-section {
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .file-label {
+      padding: 10px 25px;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .load-btn {
+      padding: 10px 30px;
+      font-size: 14px;
+      margin-left: 0;
+      width: 100%;
+    }
+
+    .count-options {
+      gap: 8px;
+    }
+
+    .count-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    #question {
+      font-size: 18px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .option-wrapper {
+      gap: 8px;
+    }
+
+    .search-btn {
+      padding: 15px 14px;
+      font-size: 16px;
+    }
+
+    .option {
+      font-size: 16px;
+      padding: 15px 18px;
+    }
+
+    .option:hover {
+      transform: translateX(5px);
+    }
+
+    .next-btn {
+      padding: 12px 40px;
+      font-size: 16px;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .file-name {
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .score-section h2 {
+      font-size: 1.8em;
+    }
+
+    .score-display {
+      font-size: 3.5em;
+    }
+
+    .score-details {
+      font-size: 1em;
+    }
+
+    .restart-btn {
+      width: 100%;
+      padding: 12px 30px;
+      font-size: 16px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    h1 {
+      font-size: 1.5em;
+    }
+
+    #question {
+      font-size: 16px;
+    }
+
+    .search-btn {
+      padding: 12px 12px;
+      font-size: 14px;
+    }
+
+    .option {
+      font-size: 14px;
+      padding: 12px 15px;
+    }
+
+    .count-btn {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .score-display {
+      font-size: 3em;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎯 Padişah Quiz</h1>
+  
+  <div class="upload-section" id="uploadSection">
+    <div class="file-input-wrapper">
+      <input type="file" id="excelFile" accept=".xlsx, .xls" />
+      <label for="excelFile" class="file-label">📁 Dosya Seç</label>
+    </div>
+    <span class="file-name" id="fileName"></span>
+    
+    <div class="question-count-section" id="questionCountSection" style="display: none;">
+      <h3>Kaç soru çözmek istersiniz?</h3>
+      <div class="count-options">
+        <button class="count-btn" onclick="selectQuestionCount(5)">5</button>
+        <button class="count-btn" onclick="selectQuestionCount(10)">10</button>
+        <button class="count-btn" onclick="selectQuestionCount(20)">20</button>
+        <button class="count-btn" onclick="selectQuestionCount(30)">30</button>
+        <button class="count-btn" onclick="selectQuestionCount(40)">40</button>
+        <button class="count-btn" onclick="selectQuestionCount(50)">50</button>
+      </div>
+    </div>
+    
+    <button class="load-btn" id="startBtn" onclick="loadExcel()" style="margin-top: 20px;">Başlat</button>
+  </div>
+
+  <div class="progress-bar hidden" id="progressBar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="question-counter hidden" id="questionCounter"></div>
+  <div id="question"></div>
+  <div id="options"></div>
+  <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">Sonraki Soru ➜</button>
+  
+  <div class="score-section hidden" id="scoreSection">
+    <h2>🎉 Test Tamamlandı!</h2>
+    <div class="score-display" id="scoreDisplay">0</div>
+    <div class="score-details" id="scoreDetails"></div>
+    <button class="restart-btn" onclick="restartQuiz()">Yeni Test Başlat</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let data = {};
+let answered = false;
+let selectedQuestionCount = 10;
+let currentQuestionIndex = 0;
+let correctAnswers = 0;
+let totalQuestions = 0;
+
+document.getElementById('excelFile').addEventListener('change', function(e) {
+  const fileName = e.target.files[0]?.name;
+  if (fileName) {
+    document.getElementById('fileName').textContent = fileName;
+    document.getElementById('questionCountSection').style.display = 'block';
+  }
+});
+
+function selectQuestionCount(count) {
+  selectedQuestionCount = count;
+  document.querySelectorAll('.count-btn').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+}
+
+function loadExcel() {
+  const file = document.getElementById('excelFile').files[0];
+  if (!file) {
+    alert('Lütfen bir Excel dosyası seçin!');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const wb = XLSX.read(e.target.result, { type: 'binary' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+    const numCols = json[0]?.length || 0;
+    
+    for (let colIndex = 0; colIndex < numCols; colIndex++) {
+      const name = json[0]?.[colIndex];
+      const terms = [];
+      
+      for (let rowIndex = 1; rowIndex < json.length; rowIndex++) {
+        const term = json[rowIndex]?.[colIndex];
+        if (term) terms.push(term);
+      }
+      
+      if (name && terms.length > 0) {
+        data[name] = terms;
+      }
+    }
+    
+    totalQuestions = selectedQuestionCount;
+    currentQuestionIndex = 0;
+    correctAnswers = 0;
+    
+    document.getElementById('uploadSection').classList.add('hidden');
+    document.getElementById('progressBar').classList.remove('hidden');
+    document.getElementById('questionCounter').classList.remove('hidden');
+    generateQuestion();
+  };
+  reader.readAsBinaryString(file);
+}
+
+function updateProgress() {
+  const progress = (currentQuestionIndex / totalQuestions) * 100;
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('questionCounter').textContent = 
+    `Soru ${currentQuestionIndex + 1} / ${totalQuestions}`;
+}
+
+function generateQuestion() {
+  answered = false;
+  document.getElementById('nextBtn').classList.add('hidden');
+  
+  updateProgress();
+  
+  const rulers = Object.keys(data);
+  const ruler = rulers[Math.floor(Math.random() * rulers.length)];
+  const terms = data[ruler];
+
+  let question = '';
+  let correctAnswer = '';
+  let options = [];
+
+  if (terms.length < 4) {
+    question = `Aşağıdakilerden hangisi "${ruler}" ile ilgilidir?`;
+    correctAnswer = terms[0];
+
+    const allTerms = Object.values(data).flat().filter(t => t !== correctAnswer);
+    const wrong = shuffle(allTerms).slice(0, 4);
+
+    options = shuffle([correctAnswer, ...wrong]);
+
+  } else {
+    question = `Aşağıdakilerden hangisi "${ruler}" ile ilgili değildir?`;
+
+    const allTerms = Object.values(data).flat();
+    const wrongPool = allTerms.filter(t => !terms.includes(t));
+    correctAnswer = shuffle(wrongPool)[0];
+
+    const correctOptions = shuffle(terms).slice(0, 4);
+
+    options = shuffle([correctAnswer, ...correctOptions]);
+  }
+
+  document.getElementById("question").innerText = question;
+  const optDiv = document.getElementById("options");
+  optDiv.innerHTML = '';
+
+  options.forEach(opt => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "option-wrapper";
+    
+    const searchBtn = document.createElement("button");
+    searchBtn.innerHTML = "🔍";
+    searchBtn.className = "search-btn";
+    searchBtn.onclick = (e) => {
+      e.stopPropagation();
+      const searchQuery = `${ruler} ${opt}`;
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+    };
+    
+    const btn = document.createElement("button");
+    btn.innerText = opt;
+    btn.className = "option";
+    btn.onclick = () => checkAnswer(btn, opt, correctAnswer);
+    
+    wrapper.appendChild(searchBtn);
+    wrapper.appendChild(btn);
+    optDiv.appendChild(wrapper);
+  });
+}
+
+function checkAnswer(btn, selected, correct) {
+  if (answered) return;
+  answered = true;
+
+  const allOptions = document.querySelectorAll('.option');
+  allOptions.forEach(opt => {
+    opt.style.pointerEvents = 'none';
+    if (opt.innerText === correct) {
+      opt.classList.add('correct');
+    }
+  });
+
+  if (selected === correct) {
+    btn.classList.add('correct');
+    correctAnswers++;
+  } else {
+    btn.classList.add('wrong');
+  }
+
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+function nextQuestion() {
+  currentQuestionIndex++;
+  
+  if (currentQuestionIndex >= totalQuestions) {
+    showScore();
+  } else {
+    generateQuestion();
+  }
+}
+
+function showScore() {
+  document.getElementById('progressBar').classList.add('hidden');
+  document.getElementById('questionCounter').classList.add('hidden');
+  document.getElementById('question').classList.add('hidden');
+  document.getElementById('options').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  
+  const score = Math.round((correctAnswers / totalQuestions) * 100);
+  
+  document.getElementById('scoreSection').classList.remove('hidden');
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('scoreDetails').textContent = 
+    `${totalQuestions} sorudan ${correctAnswers} doğru cevap verdiniz.`;
+}
+
+function restartQuiz() {
+  data = {};
+  answered = false;
+  selectedQuestionCount = 10;
+  currentQuestionIndex = 0;
+  correctAnswers = 0;
+  totalQuestions = 0;
+  
+  document.getElementById('excelFile').value = '';
+  document.getElementById('fileName').textContent = '';
+  document.getElementById('questionCountSection').style.display = 'none';
+  document.querySelectorAll('.count-btn').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  
+  document.getElementById('uploadSection').classList.remove('hidden');
+  document.getElementById('scoreSection').classList.add('hidden');
+  document.getElementById('question').classList.remove('hidden');
+  document.getElementById('options').classList.remove('hidden');
+}
+
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
+}
+</script>
+</body>
+</html>
