@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eminevim Nakit Akışı Analizi</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .card {
+                padding: 40px;
+                margin-bottom: 30px;
+            }
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+                gap: 15px;
+            }
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        
+        @media (min-width: 768px) {
+            .subtitle {
+                margin-bottom: 30px;
+                font-size: 1.1em;
+            }
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        input {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 640px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .stat-card {
+                padding: 25px;
+            }
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            word-break: break-word;
+        }
+        
+        @media (min-width: 768px) {
+            .stat-value {
+                font-size: 1.8em;
+            }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+                margin: 30px 0;
+            }
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.85em;
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (min-width: 768px) {
+            table {
+                font-size: 1em;
+                display: table;
+            }
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        
+        @media (min-width: 768px) {
+            th, td {
+                padding: 15px;
+            }
+        }
+        
+        th {
+            font-weight: 600;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #f5f7fa;
+        }
+        
+        .positive {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        #results {
+            display: none;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            h2 {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>
+                <span class="icon">🏠</span>
+                Eminevim Nakit Akışı Analizi
+            </h1>
+            <p class="subtitle">Detaylı aylık ve yıllık nakit akışı hesaplaması</p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="evDegeri">Ev Değeri (TL)</label>
+                    <input type="number" id="evDegeri" value="10000000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vadeAy">Vade (Ay)</label>
+                    <input type="number" id="vadeAy" value="180">
+                </div>
+                
+                <div class="form-group">
+                    <label for="kiraBaslangic">Başlangıç Kira (TL)</label>
+                    <input type="number" id="kiraBaslangic" value="35000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="kiraBaslangicAyi">Kira Başlangıç Ayı</label>
+                    <input type="number" id="kiraBaslangicAyi" value="36">
+                </div>
+                
+                <div class="form-group">
+                    <label for="kiraYillikZam">Yıllık Kira Artışı (%)</label>
+                    <input type="number" id="kiraYillikZam" value="15" step="0.1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ekMasraflar">Ek Masraflar (TL)</label>
+                    <input type="number" id="ekMasraflar" value="200000">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="hesapla()">
+                <span class="icon">🧮</span> Hesapla
+            </button>
+        </div>
+        
+        <div id="results">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">📈 Pozitif Olduğu Ay</div>
+                    <div class="stat-value" id="pozitifAy">-</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">💰 Aylık Taksit</div>
+                    <div class="stat-value" id="aylikTaksit">-</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">📋 Organizasyon Ücreti</div>
+                    <div class="stat-value" id="organizasyonUcreti">-</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">🔧 Ek Masraflar</div>
+                    <div class="stat-value" id="ekMasraflarGoster">-</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">📊 Toplam Net Nakit Akışı</h2>
+                <div class="chart-container">
+                    <canvas id="netNakitChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">💵 Aylık Taksit ve Kira Geliri</h2>
+                <div class="chart-container">
+                    <canvas id="taksitKiraChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">📅 Yıllık Özet Tablosu</h2>
+                <table id="yillikTablo">
+                    <thead>
+                        <tr>
+                            <th>Yıl</th>
+                            <th class="text-right">Toplam Kira</th>
+                            <th class="text-right">Net Ödeme</th>
+                            <th class="text-right">Toplam Net</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yillikTbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let netNakitChart, taksitKiraChart;
+        
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('tr-TR', {
+                style: 'currency',
+                currency: 'TRY',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+        
+        function hesapla() {
+            const evDegeri = parseFloat(document.getElementById('evDegeri').value);
+            const vadeAy = parseInt(document.getElementById('vadeAy').value);
+            const kiraBaslangic = parseFloat(document.getElementById('kiraBaslangic').value);
+            const kiraBaslangicAyi = parseInt(document.getElementById('kiraBaslangicAyi').value);
+            const kiraYillikZam = parseFloat(document.getElementById('kiraYillikZam').value) / 100;
+            const ekMasraflar = parseFloat(document.getElementById('ekMasraflar').value);
+            
+            const organizasyonUcreti = evDegeri * 0.08;
+            const toplamOdeme = evDegeri + organizasyonUcreti + ekMasraflar;
+            const aylikTaksit = toplamOdeme / vadeAy;
+            
+            const kiraAylik = [];
+            for (let ay = 1; ay <= vadeAy; ay++) {
+                if (ay < kiraBaslangicAyi) {
+                    kiraAylik.push(0);
+                } else {
+                    const yilSayisi = Math.floor((ay - kiraBaslangicAyi) / 12);
+                    kiraAylik.push(kiraBaslangic * Math.pow(1 + kiraYillikZam, yilSayisi));
+                }
+            }
+            
+            const netAylik = kiraAylik.map(kira => aylikTaksit - kira);
+            const toplamNet = [];
+            let toplam = 0;
+            for (const net of netAylik) {
+                toplam += net;
+                toplamNet.push(toplam);
+            }
+            
+            let pozitifAy = null;
+            for (let i = 0; i < toplamNet.length; i++) {
+                if (toplamNet[i] <= 0) {
+                    pozitifAy = i + 1;
+                } else {
+                    break;
+                }
+            }
+            
+            document.getElementById('pozitifAy').textContent = pozitifAy ? `${pozitifAy}. Ay` : 'Vade içinde yok';
+            document.getElementById('aylikTaksit').textContent = formatCurrency(aylikTaksit);
+            document.getElementById('organizasyonUcreti').textContent = formatCurrency(organizasyonUcreti);
+            document.getElementById('ekMasraflarGoster').textContent = formatCurrency(ekMasraflar);
+            
+            const aylar = Array.from({length: vadeAy}, (_, i) => i + 1);
+            const taksitler = Array(vadeAy).fill(aylikTaksit);
+            
+            if (netNakitChart) netNakitChart.destroy();
+            if (taksitKiraChart) taksitKiraChart.destroy();
+            
+            const ctx1 = document.getElementById('netNakitChart').getContext('2d');
+            netNakitChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: aylar,
+                    datasets: [{
+                        label: 'Toplam Net Nakit',
+                        data: toplamNet,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: '0 TL',
+                        data: Array(vadeAy).fill(0),
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000).toFixed(0) + 'K';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const ctx2 = document.getElementById('taksitKiraChart').getContext('2d');
+            taksitKiraChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: aylar,
+                    datasets: [{
+                        label: 'Taksit',
+                        data: taksitler,
+                        borderColor: '#f59e0b',
+                        borderWidth: 3,
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        pointRadius: 0
+                    }, {
+                        label: 'Kira Geliri',
+                        data: kiraAylik,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000).toFixed(0) + 'K';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const yilSayisi = Math.floor(vadeAy / 12);
+            const tbody = document.getElementById('yillikTbody');
+            tbody.innerHTML = '';
+            
+            for (let yil = 1; yil <= yilSayisi; yil++) {
+                const startAy = (yil - 1) * 12;
+                const endAy = startAy + 12;
+                const toplamKira = kiraAylik.slice(startAy, endAy).reduce((a, b) => a + b, 0);
+                const toplamNetOdeme = netAylik.slice(startAy, endAy).reduce((a, b) => a + b, 0);
+                const yilToplamNet = toplamNet[endAy - 1];
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${yil}</td>
+                    <td class="text-right positive">${formatCurrency(toplamKira)}</td>
+                    <td class="text-right" style="color: #f59e0b; font-weight: 600;">${formatCurrency(toplamNetOdeme)}</td>
+                    <td class="text-right ${yilToplamNet < 0 ? 'positive' : 'negative'}">${formatCurrency(yilToplamNet)}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+            
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
