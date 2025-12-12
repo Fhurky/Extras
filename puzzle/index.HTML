@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PuzzleMania - Premium Puzzle Koleksiyonu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-gallery {
+            width: 100%;
+            height: 250px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: #f8f9fa;
+        }
+
+        .gallery-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            cursor: pointer;
+        }
+
+        .gallery-image.active {
+            opacity: 1;
+        }
+
+        .no-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .gallery-nav {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .gallery-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .gallery-dot.active {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .gallery-arrow:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .gallery-arrow.prev {
+            left: 10px;
+        }
+
+        .gallery-arrow.next {
+            right: 10px;
+        }
+
+        .image-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            z-index: 10;
+            display: none;
+        }
+
+        .product-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .product-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .product-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .product-features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+            color: #34495e;
+        }
+
+        .product-features li:before {
+            content: "✓ ";
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .price {
+            font-size: 2rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .buy-button {
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .buy-button:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+            text-align: center;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+        }
+
+        .modal h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .contact-info {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .contact-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .contact-info p {
+            margin-bottom: 10px;
+            color: #34495e;
+            font-size: 1.1rem;
+        }
+
+        .contact-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            color: #7f8c8d;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+        }
+
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .modal-content {
+                margin: 20% auto;
+                padding: 20px;
+            }
+
+            .gallery-arrow {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧩 PuzzleMania</h1>
+            <p class="subtitle">Premium kalitede, el yapımı puzzle koleksiyonu</p>
+            <p>Zihninizi besleyin, yaratıcılığınızı geliştirin!</p>
+        </header>
+
+        <div class="products-grid" id="productsGrid">
+            <!-- Ürünler JavaScript ile dinamik olarak yüklenecek -->
+        </div>
+
+        <footer>
+            <p>&copy; 2025 PuzzleMania. Kaliteli puzzle deneyimi için doğru adres.</p>
+            <p>🚚 Ücretsiz kargo • 🔄 Kolay iade • ⭐ Premium kalite</p>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>🛒 Satın Alma Bilgileri</h2>
+            <p id="selectedProduct" style="font-weight: bold; color: #3498db; font-size: 1.2rem;"></p>
+            
+            <div class="contact-info">
+                <h3>📞 İletişim Bilgileri</h3>
+                <p><strong>Telefon:</strong> <a href="tel:+905551234567">+90 555 123 45 67</a></p>
+                <p><strong>WhatsApp:</strong> <a href="https://wa.me/905551234567">+90 555 123 45 67</a></p>
+                <p><strong>E-posta:</strong> <a href="mailto:siparis@puzzlemania.com">siparis@puzzlemania.com</a></p>
+                <p><strong>Instagram:</strong> <a href="https://instagram.com/puzzlemania">@puzzlemania</a></p>
+            </div>
+            
+            <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                <p style="color: #27ae60; font-weight: bold;">✅ Sipariş vermek için yukarıdaki iletişim kanallarından herhangi birinden bize ulaşabilirsiniz!</p>
+                <p style="color: #2c3e50; font-size: 0.95rem; margin-top: 10px;">📦 24 saat içinde kargo • 🎁 Özel ambalaj • 💯 Memnuniyet garantisi</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Puzzle veritabanı - Burada puzzle bilgilerini ve klasör adlarını tanımlıyoruz
+        const puzzleDatabase = {
+            // Klasör ismi: puzzle bilgileri
+            'yapboz1': {
+                name: 'Doğa Manzarası',
+                pieces: 1000,
+                price: 150,
+                description: 'Muhteşem doğa manzaralı puzzle, rahatlatan yeşil tonlar',
+                features: [
+                    '1000 adet premium kalite parça',
+                    'Yüksek çözünürlüklü baskı',
+                    'Dayanıklı karton malzeme',
+                    'Rehber poster hediyeli',
+                    'Şık kutu ambalaj'
+                ]
+            },
+            'yapboz2': {
+                name: 'Şehir Manzarası',
+                pieces: 1500,
+                description: 'Büyüleyici şehir ışıkları ve gece manzarası',
+                price: 220,
+                features: [
+                    '1500 adet premium kalite parça',
+                    'Ultra HD kalitesinde görüntü',
+                    'Anti-parlama mat yüzey',
+                    'Manyetik kutu tasarım',
+                    'Özel parça ayırıcı hediyeli'
+                ]
+            },
+            'yapboz3': {
+                name: 'Sanat Eseri',
+                pieces: 2000,
+                price: 350,
+                description: 'Ünlü sanat eserinin puzzle versiyonu, kültür ve sanat severler için',
+                features: [
+                    '2000 adet premium kalite parça',
+                    '4K kalitesinde süper detay',
+                    'İpeksi mat laminasyon',
+                    'Lüks ahşap kutu',
+                    'Numara baskılı parçalar',
+                    'Kılavuz kitapçık hediyeli'
+                ]
+            }
+        };
+
+        // Her puzzle için resim indeksleri
+        const currentImageIndex = {};
+        
+        // Her puzzle için resim sayıları (bu örnekte her puzzle için 3 resim var)
+        const imageCount = {
+            'yapboz1': 1,
+            'yapboz2': 1,
+            'yapboz3': 1
+        };
+
+        // Sayfa yüklendiğinde çalışacak
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPuzzles();
+        });
+
+        // Puzzle'ları yükle
+        function loadPuzzles() {
+            const grid = document.getElementById('productsGrid');
+            
+            Object.keys(puzzleDatabase).forEach(foldername => {
+                const puzzle = puzzleDatabase[foldername];
+                currentImageIndex[foldername] = 0;
+                
+                const card = createPuzzleCard(foldername, puzzle);
+                grid.appendChild(card);
+                
+                // Resimleri yükle
+                loadPuzzleImages(foldername);
+            });
+        }
+
+        // Puzzle kartı oluştur
+        function createPuzzleCard(foldername, puzzle) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            card.innerHTML = `
+                <div class="product-gallery">
+                    <div class="gallery-container" data-puzzle="${foldernaCİme}">
+                        <div class="no-image-placeholder">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🖼️</div>
+                            <div>Resimler yükleniyor...</div>
+                        </div>
+                        <div class="image-count" id="count-${foldername}">1/${imageCount[foldername] || 1}</div>
+                        <button class="gallery-arrow prev" onclick="changeImage('${foldername}', -1)">‹</button>
+                        <button class="gallery-arrow next" onclick="changeImage('${foldername}', 1)">›</button>
+                        <div class="gallery-nav" id="nav-${foldername}"></div>
+                    </div>
+                </div>
+                <h3 class="product-title">${puzzle.name} - ${puzzle.pieces} Parça</h3>
+                <p class="product-description">${puzzle.description}</p>
+                <ul class="product-features">
+                    ${puzzle.features.map(feature => `<li>${feature}</li>`).join('')}
+                </ul>
+                <div class="price">₺${puzzle.price}</div>
+                <button class="buy-button" onclick="showContact('${puzzle.name} (${puzzle.pieces} Parça)')">Satın Al</button>
+            `;
+            
+            return card;
+        }
+
+        // Puzzle resimlerini yükle
+        function loadPuzzleImages(foldername) {
+            const container = document.querySelector(`[data-puzzle="${foldername}"]`);
+            const placeholder = container.querySelector('.no-image-placeholder');
+            const totalImages = imageCount[foldername] || 1;
+            
+            // Her resim için img elementi oluştur
+            for (let i = 1; i <= totalImages; i++) {
+                const img = document.createElement('img');
+                img.className = `gallery-image ${i === 1 ? 'active' : ''}`;
+                img.src = `./${foldername}/resim${i}.jpg`; // Klasör/resim1.jpg formatında
+                img.alt = `${puzzleDatabase[foldername].name} - Resim ${i}`;
+                img.onclick = () => openFullscreen(img.src);
+                
+                // Resim yüklenemezse alternatif resim dene
+                img.onerror = function() {
+                    // Farklı uzantıları dene: .png, .jpeg, .webp
+                    const extensions = ['png', 'jpeg', 'webp', 'gif'];
+                    let extensionIndex = 0;
+                    
+                    const tryNextExtension = () => {
+                        if (extensionIndex < extensions.length) {
+                            this.src = `./${foldername}/resim${i}.${extensions[extensionIndex]}`;
+                            extensionIndex++;
+                        } else {
+                            // Hiçbir uzantı çalışmazsa varsayılan resim göster
+                            this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGOUZBIi8+CjxwYXRoIGQ9Ik0xNTAgNzBMMTcwIDEwMEgxMzBMMTUwIDcwWiIgZmlsbD0iIzZDNzU3RCIvPgo8Y2lyY2xlIGN4PSIxMjAiIGN5PSI4MCIgcj0iMTAiIGZpbGw9IiM2Qzc1N0QiLz4KPHJlY3QgeD0iODAiIHk9IjEyMCIgd2lkdGg9IjE0MCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzZDNzU3RCIvPgo8L3N2Zz4K';
+                            this.style.filter = 'opacity(0.3)';
+                        }
+                    };
+                    
+                    this.onerror = tryNextExtension;
+                    tryNextExtension();
+                };
+                
+                container.appendChild(img);
+            }
+            
+            // Placeholder'ı gizle
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+            
+            // Navigasyon oluştur (birden fazla resim varsa)
+            if (totalImages > 1) {
+                setupNavigation(foldername, totalImages);
+            }
+            
+            // Sayacı güncelle
+            updateImageCounter(foldername, totalImages);
+        }
+
+        // Navigasyon kurulumu
+        function setupNavigation(foldername, totalImages) {
+            const container = document.querySelector(`[data-puzzle="${foldername}"]`);
+            
+            // Ok butonlarını göster
+            const arrows = container.querySelectorAll('.gallery-arrow');
+            arrows.forEach(arrow => arrow.style.display = 'flex');
+            
+            // Nokta navigasyonu oluştur
+            const navContainer = document.getElementById(`nav-${foldername}`);
+            navContainer.style.display = 'flex';
+            
+            for (let i = 0; i < totalImages; i++) {
+                const dot = document.createElement('div');
+                dot.className = `gallery-dot ${i === 0 ? 'active' : ''}`;
+                dot.onclick = () => showImage(foldername, i);
+                navContainer.appendChild(dot);
+            }
+        }
+
+        // Resim sayacını güncelle
+        function updateImageCounter(foldername, totalImages) {
+            const counter = document.getElementById(`count-${foldername}`);
+            if (counter) {
+                counter.textContent = `1/${totalImages}`;
+                counter.style.display = 'block';
+            }
+        }
+
+        // Resim değiştir
+        function changeImage(foldername, direction) {
+            const totalImages = imageCount[foldername] || 1;
+            if (totalImages <= 1) return;
+            
+            currentImageIndex[foldername] = (currentImageIndex[foldername] + direction + totalImages) % totalImages;
+            showImage(foldername, currentImageIndex[foldername]);
+        }
+
+        // Belirli resmi göster
+        function showImage(foldername, index) {
+            const container = document.querySelector(`[data-puzzle="${foldername}"]`);
+            const images = container.querySelectorAll('.gallery-image');
+            const dots = container.querySelectorAll('.gallery-dot');
+            
+            // Tüm resimleri ve noktaları pasif yap
+            images.forEach(img => img.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            // Seçili resim ve noktayı aktif yap
+            if (images[index]) {
+                images[index].classList.add('active');
+                currentImageIndex[foldername] = index;
+            }
+            if (dots[index]) {
+                dots[index].classList.add('active');
+            }
+            
+            // Sayacı güncelle
+            const counter = document.getElementById(`count-${foldername}`);
+            if (counter) {
+                counter.textContent = `${index + 1}/${imageCount[foldername] || 1}`;
+            }
+        }
+
+        // Tam ekran görüntüleme
+        function openFullscreen(imageSrc) {
+            const modal = document.createElement('div');
+            modal.className = 'fullscreen-modal';
+            
+            const img = document.createElement('img');
+            img.src = imageSrc;
+            img.className = 'fullscreen-image';
+            
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+            
+            modal.onclick = () => document.body.removeChild(modal);
+            
+            // ESC tuşu ile kapat
+            const handleEsc = (e) => {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(modal);
+                    document.removeEventListener('keydown', handleEsc);
+                }
+            };
+            document.addEventListener('keydown', handleEsc);
+        }
+
+        // Modal işlevleri
+        function showContact(productName) {
+            document.getElementById('selectedProduct').textContent = productName + ' için sipariş vermek istiyorsunuz.';
+            document.getElementById('contactModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('contactModal').style.display = 'none';
+        }
+
+        // Modal dışına tıklandığında kapat
+        window.onclick = function(event) {
+            const modal = document.getElementById('contactModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // ESC tuşuna basıldığında kapat
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
