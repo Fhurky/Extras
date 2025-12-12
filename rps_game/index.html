@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taş Kağıt Makas Simülasyonu</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            background-color: black;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #555;
+        }
+        
+        .score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .winner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+        
+        .settings {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Taş Kağıt Makas Simülasyonu</h1>
+    
+    <div class="settings">
+        <div class="setting-group">
+            <label>Taş Sayısı:</label>
+            <input type="number" id="rockCount" value="20" min="1" max="100">
+        </div>
+        <div class="setting-group">
+            <label>Kağıt Sayısı:</label>
+            <input type="number" id="paperCount" value="20" min="1" max="100">
+        </div>
+        <div class="setting-group">
+            <label>Makas Sayısı:</label>
+            <input type="number" id="scissorsCount" value="20" min="1" max="100">
+        </div>
+    </div>
+    
+    <div style="position: relative;">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="score" id="scoreBoard"></div>
+        <div class="winner" id="winnerText" style="display: none;"></div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="startGame()">Oyunu Başlat</button>
+        <button onclick="resetGame()">Sıfırla</button>
+        <button onclick="pauseGame()">Duraklat/Devam</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreBoard = document.getElementById('scoreBoard');
+        const winnerText = document.getElementById('winnerText');
+        
+        const WIDTH = 800;
+        const HEIGHT = 600;
+        const RADIUS = 20;
+        const SPEED = 0.4;
+        
+        let agents = [];
+        let gameRunning = false;
+        let gamePaused = false;
+        let winner = null;
+        let animationId;
+        
+        // Görselleri yükle
+        const images = {};
+        let imagesLoaded = 0;
+        const totalImages = 3;
+        
+        function loadImages() {
+            const imageFiles = {
+                'rock': 'taş.png',
+                'paper': 'kağıt.png',
+                'scissors': 'makas.png'
+            };
+            
+            for (let type in imageFiles) {
+                images[type] = new Image();
+                images[type].onload = () => {
+                    imagesLoaded++;
+                    if (imagesLoaded === totalImages) {
+                        console.log('Tüm görseller yüklendi');
+                    }
+                };
+                images[type].onerror = () => {
+                    console.error(`Görsel yüklenemedi: ${imageFiles[type]}`);
+                    imagesLoaded++;
+                };
+                images[type].src = imageFiles[type];
+            }
+        }
+        
+        // Taş Kağıt Makas kuralları
+        const WIN_RULES = {
+            'rock': 'scissors',
+            'scissors': 'paper',
+            'paper': 'rock'
+        };
+        
+        // Renkler
+        const COLORS = {
+            'rock': '#A0A0A0',
+            'paper': '#0000FF',
+            'scissors': '#00FF00'
+        };
+        
+        // Türkçe isimler
+        const TURKISH_NAMES = {
+            'rock': 'Taş',
+            'paper': 'Kağıt',
+            'scissors': 'Makas'
+        };
+        
+        // Mesafe hesaplama
+        function distance(a, b) {
+            return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+        }
+        
+        // Agent sınıfı
+        class Agent {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                const angle = Math.random() * 2 * Math.PI;
+                this.dx = SPEED * Math.cos(angle);
+                this.dy = SPEED * Math.sin(angle);
+            }
+            
+            move() {
+                this.x += this.dx;
+                this.y += this.dy;
+                
+                // Ekran sınırlarına çarpınca sekme
+                if (this.x - RADIUS <= 0 || this.x + RADIUS >= WIDTH) {
+                    this.dx *= -1;
+                    this.x = Math.max(RADIUS, Math.min(this.x, WIDTH - RADIUS));
+                }
+                if (this.y - RADIUS <= 0 || this.y + RADIUS >= HEIGHT) {
+                    this.dy *= -1;
+                    this.y = Math.max(RADIUS, Math.min(this.y, HEIGHT - RADIUS));
+                }
+            }
+            
+            draw() {
+                // Görseli çiz
+                if (images[this.type] && images[this.type].complete) {
+                    ctx.drawImage(
+                        images[this.type], 
+                        this.x - RADIUS, 
+                        this.y - RADIUS, 
+                        RADIUS * 2, 
+                        RADIUS * 2
+                    );
+                } else {
+                    // Görsel yüklenmediyse renkli daire ve emoji kullan
+                    ctx.fillStyle = COLORS[this.type];
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    let symbol = '';
+                    if (this.type === 'rock') symbol = '🪨';
+                    else if (this.type === 'paper') symbol = '📄';
+                    else if (this.type === 'scissors') symbol = '✂️';
+                    
+                    ctx.fillText(symbol, this.x, this.y);
+                }
+            }
+        }
+        
+        // Çarpışmaları işle
+        function handleCollisions() {
+            const newAgentsState = agents.map(a => a.type);
+            
+            for (let i = 0; i < agents.length; i++) {
+                for (let j = i + 1; j < agents.length; j++) {
+                    const a = agents[i];
+                    const b = agents[j];
+                    
+                    if (distance(a, b) < RADIUS * 1.5) {
+                        if (WIN_RULES[a.type] === b.type) {
+                            newAgentsState[j] = a.type;
+                        } else if (WIN_RULES[b.type] === a.type) {
+                            newAgentsState[i] = b.type;
+                        }
+                    }
+                }
+            }
+            
+            for (let i = 0; i < agents.length; i++) {
+                agents[i].type = newAgentsState[i];
+            }
+        }
+        
+        // Oyun bitişini kontrol et
+        function checkEndCondition() {
+            const types = new Set(agents.map(a => a.type));
+            return types.size === 1;
+        }
+        
+        // Skor tablosunu güncelle
+        function updateScoreBoard() {
+            const counts = { 'rock': 0, 'paper': 0, 'scissors': 0 };
+            agents.forEach(a => counts[a.type]++);
+            
+            scoreBoard.innerHTML = `
+                <div style="color: ${COLORS.rock}">🪨 ${TURKISH_NAMES.rock}: ${counts.rock}</div>
+                <div style="color: ${COLORS.paper}">📄 ${TURKISH_NAMES.paper}: ${counts.paper}</div>
+                <div style="color: ${COLORS.scissors}">✂️ ${TURKISH_NAMES.scissors}: ${counts.scissors}</div>
+            `;
+        }
+        
+        // Oyun döngüsü
+        function gameLoop() {
+            if (!gameRunning || gamePaused) return;
+            
+            // Ekranı temizle
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+            
+            // Agentları hareket ettir
+            agents.forEach(agent => agent.move());
+            
+            // Çarpışmaları işle
+            handleCollisions();
+            
+            // Agentları çiz
+            agents.forEach(agent => agent.draw());
+            
+            // Skor tablosunu güncelle
+            updateScoreBoard();
+            
+            // Kazanan kontrolü
+            if (checkEndCondition()) {
+                winner = agents[0].type;
+                showWinner();
+                gameRunning = false;
+                return;
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        // Kazananı göster
+        function showWinner() {
+            const turkishWinner = TURKISH_NAMES[winner];
+            winnerText.textContent = `${turkishWinner.toUpperCase()} KAZANDI!`;
+            winnerText.style.color = COLORS[winner];
+            winnerText.style.display = 'block';
+            
+            setTimeout(() => {
+                winnerText.style.display = 'none';
+            }, 4000);
+        }
+        
+        // Oyunu başlat
+        function startGame() {
+            if (gameRunning) return;
+            
+            const rockCount = parseInt(document.getElementById('rockCount').value);
+            const paperCount = parseInt(document.getElementById('paperCount').value);
+            const scissorsCount = parseInt(document.getElementById('scissorsCount').value);
+            
+            // Agentları oluştur
+            agents = [];
+            
+            // Taş agentları
+            for (let i = 0; i < rockCount; i++) {
+                agents.push(new Agent(
+                    Math.random() * (WIDTH - 2 * RADIUS) + RADIUS,
+                    Math.random() * (HEIGHT - 2 * RADIUS) + RADIUS,
+                    'rock'
+                ));
+            }
+            
+            // Kağıt agentları
+            for (let i = 0; i < paperCount; i++) {
+                agents.push(new Agent(
+                    Math.random() * (WIDTH - 2 * RADIUS) + RADIUS,
+                    Math.random() * (HEIGHT - 2 * RADIUS) + RADIUS,
+                    'paper'
+                ));
+            }
+            
+            // Makas agentları
+            for (let i = 0; i < scissorsCount; i++) {
+                agents.push(new Agent(
+                    Math.random() * (WIDTH - 2 * RADIUS) + RADIUS,
+                    Math.random() * (HEIGHT - 2 * RADIUS) + RADIUS,
+                    'scissors'
+                ));
+            }
+            
+            gameRunning = true;
+            gamePaused = false;
+            winner = null;
+            winnerText.style.display = 'none';
+            
+            gameLoop();
+        }
+        
+        // Oyunu sıfırla
+        function resetGame() {
+            gameRunning = false;
+            gamePaused = false;
+            winner = null;
+            agents = [];
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            // Ekranı temizle
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+            
+            winnerText.style.display = 'none';
+            scoreBoard.innerHTML = '';
+        }
+        
+        // Oyunu duraklat/devam ettir
+        function pauseGame() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            if (!gamePaused) {
+                gameLoop();
+            }
+        }
+        
+        // Başlangıç ekranını hazırla
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = '32px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Taş Kağıt Makas Simülasyonu', WIDTH / 2, HEIGHT / 2 - 50);
+        
+        ctx.font = '20px Arial';
+        ctx.fillText('Oyunu başlatmak için "Oyunu Başlat" butonuna tıklayın', WIDTH / 2, HEIGHT / 2 + 20);
+        
+        // Görselleri yükle
+        loadImages();
+    </script>
+</body>
+</html>
