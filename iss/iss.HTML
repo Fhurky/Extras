@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛰️ ISS Tracker</title>
+    <style>
+        /* CSS kodları bu etiket içinde yer almalıdır */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e, #16213e);
+            color: white;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #4fc3f7, #29b6f6, #03a9f4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .map-section {
+            flex: 2;
+            min-width: 600px;
+            background: rgba(30, 30, 50, 0.8);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(70, 130, 180, 0.3);
+        }
+
+        .map-title {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4fc3f7;
+        }
+
+        .map-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #worldMap {
+            width: 900px;
+            height: 450px;
+            background: linear-gradient(180deg, #2b4c7e 0%, #1e3a5f 100%);
+            border: 2px solid #4682b4;
+            cursor: crosshair;
+            border-radius: 10px;
+        }
+
+        .iss-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #ff4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
+            z-index: 100;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(255, 68, 68, 0.9); }
+        }
+
+        .info-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 50, 0.8);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(70, 130, 180, 0.3);
+        }
+
+        .info-title {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4fc3f7;
+        }
+
+        .status-indicator {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-online {
+            background: rgba(68, 255, 68, 0.2);
+            border-color: #44ff44;
+            color: #44ff44;
+        }
+
+        .info-display {
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            border: 1px solid rgba(70, 130, 180, 0.2);
+            white-space: pre-line;
+            height: 350px;
+            overflow-y: auto;
+        }
+
+        .info-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .info-display::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .info-display::-webkit-scrollbar-thumb {
+            background: #4682b4;
+            border-radius: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            background: rgba(30, 30, 50, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(70, 130, 180, 0.3);
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4682b4, #5a9fd4);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(70, 130, 180, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #666, #777);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(119, 119, 119, 0.4);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4fc3f7;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .grid-line {
+            stroke: #1e3a5f;
+            stroke-width: 1;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .map-section {
+                min-width: auto;
+            }
+            
+            #worldMap {
+                width: 100%;
+                max-width: 500px;
+                height: 250px;
+            }
+            
+            .controls {
+                justify-content: space-around;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛰️ ISS Takip Sistemi</h1>
+        </div>
+        
+        <div class="main-content">
+            <div class="map-section">
+                <div class="map-title">🌍 Gerçek Zamanlı Konum</div>
+                <div class="map-container">
+                    <canvas id="worldMap" width="900" height="450"></canvas>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-title">📊 ISS Data</div>
+                <div id="statusIndicator" class="status-indicator">
+                    <span class="loading"></span> Başlatılıyor...
+                </div>
+                <div id="infoDisplay" class="info-display">Veri yükleniyor...</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="refreshBtn" class="btn">🔄 Yenile</button>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="autoRefresh" checked>
+                <span>Otomatik (2s)</span>
+            </label>
+            
+            <button id="clearTrailBtn" class="btn btn-secondary">🧹 Temizle</button>
+        </div>
+    </div>
+
+    <script>
+        class ISSTracker {
+            constructor() {
+                this.API_URL = "https://api.wheretheiss.at/v1/satellites/25544";
+                this.MAP_WIDTH = 820;
+                this.MAP_HEIGHT = 410;
+                
+                this.isUpdating = false;
+                this.autoRefreshEnabled = true;
+                this.updateInterval = 2000;
+
+                this.issTLE = null;
+                this.routePoints = [];
+                this.routeDuration = 60 * 60 * 2; // Gelecek 2 saatlik rotayı hesapla
+                this.routeStep = 30; // Her 30 saniyede bir nokta al
+                
+                this.mapLoaded = false;
+                this.mapImage = null;
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupElements();
+                this.setupEventListeners();
+                this.fetchTLEData();
+                this.startAutoUpdate();
+            }
+            
+            setupElements() {
+                this.canvas = document.getElementById('worldMap');
+                this.ctx = this.canvas.getContext('2d');
+                this.statusIndicator = document.getElementById('statusIndicator');
+                this.infoDisplay = document.getElementById('infoDisplay');
+                this.refreshBtn = document.getElementById('refreshBtn');
+                this.autoRefreshCheckbox = document.getElementById('autoRefresh');
+                
+                // İz Temizle butonu artık rotayı yenileyecek
+                this.clearTrailBtn = document.getElementById('clearTrailBtn');
+                
+                this.loadWorldMap();
+                
+                this.issMarker = document.createElement('div');
+                this.issMarker.className = 'iss-marker';
+                this.issMarker.style.display = 'none';
+                this.canvas.parentElement.appendChild(this.issMarker);
+            }
+            
+            setupEventListeners() {
+                this.refreshBtn.addEventListener('click', () => this.manualRefresh());
+                this.clearTrailBtn.addEventListener('click', () => this.clearRoute());
+                this.autoRefreshCheckbox.addEventListener('change', (e) => {
+                    this.autoRefreshEnabled = e.target.checked;
+                    if (this.autoRefreshEnabled) {
+                        this.startAutoUpdate();
+                        this.updateStatus('🟡 Otomatik Açık', '#ffff44');
+                    } else {
+                        this.updateStatus('🟡 Manual Mod', '#ffff44');
+                    }
+                });
+            }
+            
+            lonLatToXY(lon, lat) {
+                const x = (lon + 180) * (this.MAP_WIDTH / 360);
+                const y = (90 - lat) * (this.MAP_HEIGHT / 180);
+                return [Math.round(x), Math.round(y)];
+            }
+            
+            async fetchISSData() {
+                if (this.isUpdating) return;
+                
+                this.isUpdating = true;
+                
+                try {
+                    const response = await fetch(this.API_URL, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        signal: AbortSignal.timeout(3000)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.updateGUI(data);
+                    
+                } catch (error) {
+                    console.error('API Error:', error);
+                    this.updateStatus('🔴 Bağlantı Hatası', '#ff4444');
+                } finally {
+                    this.isUpdating = false;
+                }
+            }
+            
+            async fetchTLEData() {
+                try {
+                    const response = await fetch('https://tle.ivanstanojevic.me/api/tle/25544');
+                    const data = await response.json();
+                    
+                    this.issTLE = data;
+                    console.log('🛰️ TLE verisi yüklendi');
+
+                    this.calculateRoute();
+                } catch (error) {
+                    console.error('TLE Verisi Hatası:', error);
+                }
+            }
+
+            calculateRoute() {
+                if (!this.issTLE || !window.satellite) return;
+
+                const tleLine1 = this.issTLE.line1;
+                const tleLine2 = this.issTLE.line2;
+
+                const satrec = satellite.twoline2satrec(tleLine1, tleLine2);
+
+                this.routePoints = [];
+                const now = new Date();
+
+                for (let i = 0; i <= this.routeDuration; i += this.routeStep) {
+                    const date = new Date(now.getTime() + i * 1000);
+                    const positionAndVelocity = satellite.propagate(satrec, date);
+                    const gmst = satellite.gstime(date);
+                    const position = satellite.eciToGeodetic(positionAndVelocity.position, gmst);
+
+                    const longitude = satellite.degreesLong(position.longitude);
+                    const latitude = satellite.degreesLat(position.latitude);
+
+                    if (longitude !== null && latitude !== null) {
+                        const [x, y] = this.lonLatToXY(longitude, latitude);
+                        this.routePoints.push({ x, y });
+                    }
+                }
+            }
+
+            updateGUI(data) {
+                try {
+                    const [x, y] = this.lonLatToXY(data.longitude, data.latitude);
+                    
+                    this.issMarker.style.left = `${x}px`;
+                    this.issMarker.style.top = `${y}px`;
+                    this.issMarker.style.display = 'block';
+
+                    this.redrawMap();
+                    this.drawRoute();
+                    
+                    this.updateInfoDisplay(data);
+                    this.updateStatus('🟢 Canlı', '#44ff44');
+                } catch (error) {
+                    console.error('GUI Update Error:', error);
+                    this.updateStatus('🔴 GUI Hatası', '#ff4444');
+                }
+            }
+            
+            updateInfoDisplay(data) {
+                try {
+                    const date = new Date(data.timestamp * 1000);
+                    const timeString = date.toISOString().substr(11, 8) + ' UTC';
+                    const dateString = date.toISOString().substr(0, 10);
+                    
+                    const altitudeKm = (data.altitude * 1.609344);
+                    const velocityKmh = (data.velocity * 1.609344);
+                    
+                    const visibility = data.visibility === 'daylight' ? '☀️ Gündüz' : '🌙 Gece';
+                    
+                    const infoText = `🕐 ZAMAN
+${dateString} ${timeString}
+
+🌐 KONUM  
+Enlem: ${data.latitude.toFixed(4)}°
+Boylam: ${data.longitude.toFixed(4)}°
+
+📏 YÜKSEKLİK: ${altitudeKm.toFixed(2)} km
+⚡ HIZ: ${velocityKmh.toFixed(2)} km/h
+
+☀️ GÖRÜNÜRLÜK: ${visibility}
+
+Made by Furkan KOÇAL`;
+
+                    this.infoDisplay.textContent = infoText;
+                    
+                } catch (error) {
+                    console.error('Info display error:', error);
+                    this.infoDisplay.textContent = 'Bilgi güncellenemiyor...';
+                }
+            }
+            
+            updateStatus(text, color) {
+                this.statusIndicator.innerHTML = text;
+                this.statusIndicator.className = 'status-indicator';
+                if (color === '#44ff44') {
+                    this.statusIndicator.classList.add('status-online');
+                }
+                this.statusIndicator.style.color = color;
+            }
+            
+            manualRefresh() {
+                if (!this.isUpdating) {
+                    this.fetchISSData();
+                    this.fetchTLEData();
+                }
+            }
+            
+            clearRoute() {
+                this.routePoints = [];
+                this.redrawMap();
+            }
+            
+            startAutoUpdate() {
+                this.fetchISSData();
+                this.fetchTLEData();
+                
+                const updateLoop = () => {
+                    if (this.autoRefreshEnabled) {
+                        this.fetchISSData();
+                        this.calculateRoute();
+                    }
+                    setTimeout(updateLoop, this.updateInterval);
+                };
+                
+                setTimeout(updateLoop, this.updateInterval);
+            }
+            
+            loadWorldMap() {
+                const img = new Image();
+                img.onload = () => {
+                    this.mapImage = img;
+                    this.ctx.drawImage(img, 0, 0, this.MAP_WIDTH, this.MAP_HEIGHT);
+                    this.mapLoaded = true;
+                    console.log('🌍 Dünya haritası yüklendi');
+                };
+                
+                img.onerror = () => {
+                    console.log('⚠️ world_map.jpg bulunamadı, varsayılan harita çiziliyor...');
+                    this.drawDefaultMap();
+                    this.mapLoaded = true;
+                };
+                
+                img.src = 'world_map.jpg';
+                
+                setTimeout(() => {
+                    if (!this.mapLoaded) {
+                        console.log('⏰ Harita yükleme timeout, varsayılan harita çiziliyor...');
+                        this.drawDefaultMap();
+                        this.mapLoaded = true;
+                    }
+                }, 2000);
+            }
+            
+            drawDefaultMap() {
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.MAP_HEIGHT);
+                gradient.addColorStop(0, '#2b4c7e');
+                gradient.addColorStop(1, '#1e3a5f');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.MAP_WIDTH, this.MAP_HEIGHT);
+                
+                this.ctx.strokeStyle = '#1e3a5f';
+                this.ctx.lineWidth = 1;
+                this.ctx.globalAlpha = 0.5;
+                
+                for (let x = 0; x <= this.MAP_WIDTH; x += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.MAP_HEIGHT);
+                    this.ctx.stroke();
+                }
+                
+                for (let y = 0; y <= this.MAP_HEIGHT; y += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.MAP_WIDTH, y);
+                    this.ctx.stroke();
+                }
+                
+                this.ctx.globalAlpha = 0.6;
+                this.ctx.fillStyle = '#2d5aa0';
+                this.ctx.strokeStyle = '#1e3a5f';
+                this.ctx.lineWidth = 1;
+                
+                this.drawRoundedRect(100, 150, 150, 100, 10);
+                this.drawRoundedRect(280, 120, 200, 80, 15);
+                this.drawRoundedRect(500, 140, 180, 90, 12);
+                this.drawRoundedRect(50, 200, 120, 150, 8);
+                this.drawRoundedRect(650, 280, 100, 80, 6);
+                
+                this.ctx.globalAlpha = 1;
+            }
+            
+            drawRoundedRect(x, y, width, height, radius) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(x + radius, y);
+                this.ctx.lineTo(x + width - radius, y);
+                this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.ctx.lineTo(x + width, y + height - radius);
+                this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.ctx.lineTo(x + radius, y + height);
+                this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.ctx.lineTo(x, y + radius);
+                this.ctx.quadraticCurveTo(x, y, x + radius, y);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            redrawMap() {
+                if (this.mapImage) {
+                    this.ctx.drawImage(this.mapImage, 0, 0, this.MAP_WIDTH, this.MAP_HEIGHT);
+                } else {
+                    this.drawDefaultMap();
+                }
+            }
+            
+            drawRoute() {
+                if (this.routePoints.length === 0) return;
+
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = '#44aaff';
+                this.ctx.lineWidth = 2;
+
+                const startPoint = this.routePoints[0];
+                this.ctx.moveTo(startPoint.x, startPoint.y);
+
+                for (let i = 1; i < this.routePoints.length; i++) {
+                    const point = this.routePoints[i];
+                    this.ctx.lineTo(point.x, point.y);
+                }
+
+                this.ctx.stroke();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new ISSTracker();
+        });
+        
+        if (window.location.protocol === 'file:') {
+            alert('Not: Dosyayı bir web server üzerinden açmanız gerekiyor (CORS politikası nedeniyle)');
+        }
+    </script>
+</body>
+</html>
